@@ -1,12 +1,8 @@
-from debug_toolbar.toolbar import debug_toolbar_urls
+# from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.conf.urls import handler403, handler404, handler500
 from django.conf.urls.static import static
 from django.contrib import admin
-# from django.contrib.auth import views as auth_views
-# from django.contrib.auth.forms import (
-#     PasswordChangeForm, PasswordResetForm
-# )
 from django.urls import include, path, reverse_lazy
 from django.views.generic import CreateView
 
