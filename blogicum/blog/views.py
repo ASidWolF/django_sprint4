@@ -12,9 +12,17 @@ from .forms import CommentForm, PostForm
 from .models import Post, Category, Comment
 
 
-class PostMixin:
+class PostMixin(LoginRequiredMixin):
     model = Post
     template_name = 'blog/create.html'
+    pk_url_kwarg = 'post_id'
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_object().author != request.user:
+            return redirect(
+                'blog:post_detail', id=self.kwargs['post_id']
+            )
+        return super().dispatch(request, *args, **kwargs)
 
 
 class PostListView(ListView):
@@ -42,19 +50,18 @@ class PostListView(ListView):
 class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/detail.html'
-    slug_field = 'id'
-    slug_url_kwarg = 'id'
+    pk_url_kwarg = 'post_id'
 
     def get_object(self, queryset=None):
         obj = get_object_or_404(
             self.model.objects,
-            pk=self.kwargs['id']
+            pk=self.kwargs['post_id']
         )
         author = obj.author
         if author != self.request.user:
             obj = get_object_or_404(
                 Post.default_filters,
-                pk=self.kwargs['id']
+                pk=self.kwargs['post_id']
             )
 
         return obj
@@ -77,35 +84,19 @@ class PostCreateView(PostMixin, LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('blog:profile', args=[self.request.user])
+        return reverse('blog:profile', args=[self.request.user.username])
 
 
-class PostUpdateView(PostMixin, LoginRequiredMixin, UpdateView):
+class PostUpdateView(PostMixin, UpdateView):
     form_class = PostForm
-    slug_field = 'id'
-    slug_url_kwarg = 'id'
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.get_object().author != request.user:
-            return redirect(
-                'blog:post_detail', id=self.kwargs['id']
-            )
-        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse(
-            'blog:post_detail', kwargs={'id': self.kwargs['id']}
+            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
         )
 
 
-class PostDeleteView(PostMixin, LoginRequiredMixin, DeleteView):
-    slug_field = 'id'
-    slug_url_kwarg = 'id'
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.get_object().author != request.user:
-            return redirect('blog:post_detail', id=self.kwargs['id'])
-        return super().dispatch(request, *args, **kwargs)
+class PostDeleteView(PostMixin, DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -126,30 +117,31 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        form.instance.post = get_object_or_404(Post, pk=self.kwargs['id'])
+        form.instance.post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         form.save()
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('blog:post_detail', kwargs={'id': self.kwargs['id']})
+        return reverse(
+            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
+        )
 
 
 class CommentMixin(LoginRequiredMixin):
     model = Comment
     template_name = 'blog/comment.html'
-    slug_field = 'id'
-    slug_url_kwarg = 'id'
+    pk_url_kwarg = 'comment_id'
 
     def get_success_url(self):
         return reverse(
-            'blog:post_detail', kwargs={'id': self.kwargs['post_id']}
+            'blog:post_detail', args=[self.kwargs['post_id']]
         )
 
     def dispatch(self, request, *args, **kwargs):
-        comment = get_object_or_404(Comment, pk=self.kwargs['pk'])
+        comment = get_object_or_404(Comment, pk=self.kwargs['comment_id'])
         if comment.author != self.request.user:
             return redirect(
-                'blog:post_detail', kwargs={'id': self.kwargs['post_id']}
+                'blog:post_detail', post_id=self.kwargs['post_id']
             )
         return super().dispatch(request, *args, **kwargs)
 

@@ -27,7 +27,7 @@ urlpatterns = [
         name='category_posts'
     ),
     path(
-        'posts/<int:id>/',
+        'posts/<int:post_id>/',
         PostDetailView.as_view(),
         name='post_detail'
     ),
@@ -37,27 +37,27 @@ urlpatterns = [
         name='create_post'
     ),
     path(
-        'posts/<int:id>/edit/',
+        'posts/<int:post_id>/edit/',
         PostUpdateView.as_view(),
         name='edit_post'
     ),
     path(
-        'posts/<int:id>/delete/',
+        'posts/<int:post_id>/delete/',
         PostDeleteView.as_view(),
         name='delete_post'
     ),
     path(
-        'posts/<int:id>/comment/',
+        'posts/<int:post_id>/comment/',
         CommentCreateView.as_view(),
         name='add_comment'
     ),
     path(
-        'posts/<int:post_id>/edit_comment/<int:pk>/',
+        'posts/<int:post_id>/edit_comment/<int:comment_id>/',
         CommentUpdateView.as_view(),
         name='edit_comment'
     ),
     path(
-        'posts/<int:post_id>/delete_comment/<int:pk>/',
+        'posts/<int:post_id>/delete_comment/<int:comment_id>/',
         CommentDeleteView.as_view(),
         name='delete_comment'
     ),
