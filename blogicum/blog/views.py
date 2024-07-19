@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import (
@@ -142,10 +143,8 @@ class CommentMixin(LoginRequiredMixin):
 
     def dispatch(self, request, *args, **kwargs):
         comment = get_object_or_404(Comment, pk=self.kwargs['comment_id'])
-        if comment.author != self.request.user:
-            return redirect(
-                'blog:post_detail', post_id=self.kwargs['post_id']
-            )
+        if comment.author != request.user:
+            return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
 
 
