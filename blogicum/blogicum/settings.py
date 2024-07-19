@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from django.urls import reverse_lazy
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-1!swh#i@ebyms#bswi(mems%6p0pxfpi62!)$lpr%y$upg3(52'
@@ -19,7 +17,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'debug_toolbar',
+    'debug_toolbar',
     'django_bootstrap5',
 ]
 
@@ -113,6 +111,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 # LOGIN_URL = reverse_lazy('users:login')
-LOGIN_REDIRECT_URL = reverse_lazy('blog:index')
+LOGIN_REDIRECT_URL = 'blog:index'
+
+LOGIN_URL = 'login'
 """Константы для проекта"""
 POSTS_PER_PAGE = 10
