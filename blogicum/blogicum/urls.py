@@ -7,7 +7,7 @@ from django.contrib import admin
 # from django.contrib.auth.forms import (
 #     PasswordChangeForm, PasswordResetForm
 # )
-from django.urls import include, path  # , reverse_lazy
+from django.urls import include, path, reverse_lazy
 from django.views.generic import CreateView
 
 from core.forms import CustomUserCreationForm
@@ -22,90 +22,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('django.contrib.auth.urls')),
     path(
-        'registration/',
+        'auth/registration/',
         CreateView.as_view(
-            form_class=CustomUserCreationForm,
-            success_url='/',
             template_name='registration/registration_form.html',
+            form_class=CustomUserCreationForm,
+            success_url=reverse_lazy('blog:index'),
         ),
-        name='registration'
+        name='registration',
     ),
     # path('__debug__/', include('debug_toolbar.urls')),
 ] + debug_toolbar_urls() + static(
     settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
 )
-
-# auth_urls = ([
-#     path(
-#         'login/',
-#         auth_views.LoginView.as_view(
-#             template_name='registration/login.html'
-#         ),
-#         name='login',
-#     ),
-#     path(
-#         'logout/',
-#         auth_views.LogoutView.as_view(
-#             template_name='registration/logged_out.html'
-#         ),
-#         name='logout',
-#     ),
-#     path(
-#         'registration/',
-#         CreateView.as_view(
-#             form_class=CustomUserCreationForm,
-#             success_url='/',
-#             template_name='registration/registration_form.html',
-#         ),
-#         name='registration'
-#     ),
-#     path(
-#         'password_change/',
-#         auth_views.PasswordChangeView.as_view(
-#             form_class=PasswordChangeForm,
-#             success_url=reverse_lazy('users:password_change_done'),
-#             template_name='registration/password_change_form.html',
-#         ),
-#         name='password_change'
-#     ),
-#     path(
-#         'password_change_done/',
-#         auth_views.PasswordChangeDoneView.as_view(
-#             template_name='registration/password_change_done.html',
-#         ),
-#         name='password_change_done'
-#     ),
-#     path(
-#         'password_reset/',
-#         auth_views.PasswordResetView.as_view(
-#             form_class=PasswordResetForm,
-#             email_template_name='registration/password_reset_email.html',
-#             success_url=reverse_lazy('users:password_reset_done'),
-#             template_name='registration/password_reset_form.html',
-#         ),
-#         name='password_reset'
-#     ),
-#     path(
-#         'password_reset_done/',
-#         auth_views.PasswordResetDoneView.as_view(
-#             template_name='registration/password_reset_done.html',
-#         ),
-#         name='password_reset_done'
-#     ),
-#     path(
-#         'password_reset_confirm/<uidb64>/<token>/',
-#         auth_views.PasswordResetConfirmView.as_view(
-#             template_name='registration/password_reset_confirm.html',
-#             success_url=reverse_lazy('users:password_reset_complete')
-#         ),
-#         name='password_reset_confirm'
-#     ),
-#     path(
-#         'password_reset_complete/',
-#         auth_views.PasswordResetCompleteView.as_view(
-#             template_name='registration/password_reset_complete.html'
-#         ), name='password_reset_complete'
-#     ),
-# ], 'users')
-
-# urlpatterns += [path('auth/', include(auth_urls))]
