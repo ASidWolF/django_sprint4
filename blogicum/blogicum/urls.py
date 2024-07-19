@@ -1,4 +1,4 @@
-from debug_toolbar.toolbar import debug_toolbar_urls
+# from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.conf.urls import handler403, handler404, handler500
 from django.conf.urls.static import static
@@ -29,4 +29,4 @@ urlpatterns = [
     # path('__debug__/', include('debug_toolbar.urls')),
 ] + static(
     settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
-) + debug_toolbar_urls()
+)  # + debug_toolbar_urls()
