@@ -18,9 +18,10 @@ class PostMixin(LoginRequiredMixin):
     pk_url_kwarg = 'post_id'
 
     def dispatch(self, request, *args, **kwargs):
-        if self.get_object().author != request.user:
+        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
+        if post.author != request.user:
             return redirect(
-                'blog:post_detail', id=self.kwargs['post_id']
+                'blog:post_detail', post_id=self.kwargs['post_id']
             )
         return super().dispatch(request, *args, **kwargs)
 
@@ -76,15 +77,17 @@ class PostDetailView(DetailView):
         return context
 
 
-class PostCreateView(PostMixin, LoginRequiredMixin, CreateView):
+class PostCreateView(LoginRequiredMixin, CreateView):
+    model = Post
     form_class = PostForm
+    template_name = 'blog/create.html'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('blog:profile', args=[self.request.user.username])
+        return reverse('blog:profile', args=[self.request.user])
 
 
 class PostUpdateView(PostMixin, UpdateView):
@@ -151,7 +154,12 @@ class CommentUpdateView(CommentMixin, UpdateView):
 
 
 class CommentDeleteView(CommentMixin, DeleteView):
-    pass
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Удаляем объект формы из контекста
+        del context['form']
+        return context
 
 
 class UserDetailView(DetailView):
