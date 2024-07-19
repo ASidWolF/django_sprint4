@@ -31,6 +31,6 @@ urlpatterns = [
         name='registration',
     ),
     # path('__debug__/', include('debug_toolbar.urls')),
-] + debug_toolbar_urls() + static(
+] + static(
     settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
-)
+)  # + debug_toolbar_urls()
