@@ -26,7 +26,29 @@ class PostMixin(LoginRequiredMixin):
         return super().dispatch(request, *args, **kwargs)
 
 
-class PostListView(ListView):
+class GetSuccessUrlPostDetailMixin:
+
+    def get_success_url(self):
+        return reverse(
+            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
+        )
+
+
+class PaginationMixin:
+
+    def paginate_queryset(self, queryset, page_size=settings.POSTS_PER_PAGE):
+        paginator = Paginator(queryset, page_size)
+        page = self.request.GET.get('page')
+        try:
+            posts = paginator.page(page)
+        except PageNotAnInteger:
+            posts = paginator.page(1)
+        except EmptyPage:
+            posts = paginator.page(paginator.num_pages)
+        return posts
+
+
+class PostListView(PaginationMixin, ListView):
     model = Post
     template_name = 'blog/index.html'
     context_object_name = 'page_obj'
@@ -34,17 +56,7 @@ class PostListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        paginator = Paginator(context['page_obj'], settings.POSTS_PER_PAGE)
-        page = self.request.GET.get('page')
-
-        try:
-            posts = paginator.page(page)
-        except PageNotAnInteger:
-            posts = paginator.page(1)
-        except EmptyPage:
-            posts = paginator.page(paginator.num_pages)
-
-        context['page_obj'] = posts
+        context['page_obj'] = self.paginate_queryset(self.queryset)
         return context
 
 
@@ -90,13 +102,8 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return reverse('blog:profile', args=[self.request.user])
 
 
-class PostUpdateView(PostMixin, UpdateView):
+class PostUpdateView(PostMixin, GetSuccessUrlPostDetailMixin, UpdateView):
     form_class = PostForm
-
-    def get_success_url(self):
-        return reverse(
-            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
-        )
 
 
 class PostDeleteView(PostMixin, DeleteView):
@@ -110,7 +117,11 @@ class PostDeleteView(PostMixin, DeleteView):
         return reverse("blog:profile", kwargs={"username": self.request.user})
 
 
-class CommentCreateView(LoginRequiredMixin, CreateView):
+class CommentCreateView(
+    LoginRequiredMixin,
+    GetSuccessUrlPostDetailMixin,
+    CreateView
+):
     model = Comment
     template_name = 'blog/comment.html'
     form_class = CommentForm
@@ -124,21 +135,11 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         form.save()
         return super().form_valid(form)
 
-    def get_success_url(self):
-        return reverse(
-            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
-        )
 
-
-class CommentMixin(LoginRequiredMixin):
+class CommentMixin(LoginRequiredMixin, GetSuccessUrlPostDetailMixin):
     model = Comment
     template_name = 'blog/comment.html'
     pk_url_kwarg = 'comment_id'
-
-    def get_success_url(self):
-        return reverse(
-            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
-        )
 
     def dispatch(self, request, *args, **kwargs):
         comment = get_object_or_404(Comment, pk=self.kwargs['comment_id'])
@@ -156,13 +157,8 @@ class CommentUpdateView(CommentMixin, UpdateView):
 class CommentDeleteView(CommentMixin, DeleteView):
     pass
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     del context['form']
-    #     return context
 
-
-class UserDetailView(DetailView):
+class UserDetailView(PaginationMixin, DetailView):
     model = User
     template_name = 'blog/profile.html'
     context_object_name = 'profile'
@@ -179,16 +175,8 @@ class UserDetailView(DetailView):
             profile_posts = Post.default_filters.filter(
                 author=self.get_object()
             ).order_by('-pub_date')
-        paginator = Paginator(profile_posts, settings.POSTS_PER_PAGE)
-        page = self.request.GET.get('page')
-        try:
-            posts = paginator.page(page)
-        except PageNotAnInteger:
-            posts = paginator.page(1)
-        except EmptyPage:
-            posts = paginator.page(paginator.num_pages)
 
-        context['page_obj'] = posts
+        context['page_obj'] = self.paginate_queryset(profile_posts)
         return context
 
     def get_object(self, queryset=None):
@@ -211,7 +199,7 @@ class UserUpdateView(LoginRequiredMixin, UpdateView):
         )
 
 
-class CategoryPostsListView(ListView):
+class CategoryPostsListView(PaginationMixin, ListView):
     model = Post
     template_name = 'blog/category.html'
     context_object_name = 'page_obj'
@@ -223,20 +211,10 @@ class CategoryPostsListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        paginator = Paginator(self.object_list, settings.POSTS_PER_PAGE)
-        page = self.request.GET.get('page')
-
-        try:
-            posts = paginator.page(page)
-        except PageNotAnInteger:
-            posts = paginator.page(1)
-        except EmptyPage:
-            posts = paginator.page(paginator.num_pages)
-
         category = get_object_or_404(
             Category, slug=self.kwargs['category_slug'], is_published=True
         )
-
         context['category'] = category
-        context['page_obj'] = posts
+        page_obj = self.get_queryset()
+        context['page_obj'] = self.paginate_queryset(page_obj)
         return context
