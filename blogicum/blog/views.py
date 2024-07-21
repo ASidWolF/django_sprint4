@@ -1,51 +1,16 @@
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import (
     ListView, DetailView, UpdateView, DeleteView, CreateView,
 )
 
 from .forms import CommentForm, PostForm
+from .mixins import (
+    CommentMixin, PaginationMixin, PostMixin, GetSuccessUrlPostDetailMixin
+)
 from .models import Post, Category, Comment
-
-
-class PostMixin(LoginRequiredMixin):
-    model = Post
-    template_name = 'blog/create.html'
-    pk_url_kwarg = 'post_id'
-
-    def dispatch(self, request, *args, **kwargs):
-        post = get_object_or_404(Post, pk=self.kwargs['post_id'])
-        if post.author != request.user:
-            return redirect(
-                'blog:post_detail', post_id=self.kwargs['post_id']
-            )
-        return super().dispatch(request, *args, **kwargs)
-
-
-class GetSuccessUrlPostDetailMixin:
-
-    def get_success_url(self):
-        return reverse(
-            'blog:post_detail', kwargs={'post_id': self.kwargs['post_id']}
-        )
-
-
-class PaginationMixin:
-
-    def paginate_queryset(self, queryset, page_size=settings.POSTS_PER_PAGE):
-        paginator = Paginator(queryset, page_size)
-        page = self.request.GET.get('page')
-        try:
-            posts = paginator.page(page)
-        except PageNotAnInteger:
-            posts = paginator.page(1)
-        except EmptyPage:
-            posts = paginator.page(paginator.num_pages)
-        return posts
 
 
 class PostListView(PaginationMixin, ListView):
@@ -110,11 +75,11 @@ class PostDeleteView(PostMixin, DeleteView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["form"] = PostForm(instance=self.object)
+        context['form'] = PostForm(instance=self.object)
         return context
 
     def get_success_url(self):
-        return reverse("blog:profile", kwargs={"username": self.request.user})
+        return reverse('blog:profile', kwargs={'username': self.request.user})
 
 
 class CommentCreateView(
@@ -134,20 +99,6 @@ class CommentCreateView(
         form.instance.post = get_object_or_404(Post, pk=self.kwargs['post_id'])
         form.save()
         return super().form_valid(form)
-
-
-class CommentMixin(LoginRequiredMixin, GetSuccessUrlPostDetailMixin):
-    model = Comment
-    template_name = 'blog/comment.html'
-    pk_url_kwarg = 'comment_id'
-
-    def dispatch(self, request, *args, **kwargs):
-        comment = get_object_or_404(Comment, pk=self.kwargs['comment_id'])
-        if comment.author != request.user:
-            return redirect(
-                'blog:post_detail', post_id=self.kwargs['post_id']
-            )
-        return super().dispatch(request, *args, **kwargs)
 
 
 class CommentUpdateView(CommentMixin, UpdateView):

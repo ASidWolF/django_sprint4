@@ -110,7 +110,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
-# LOGIN_URL = reverse_lazy('users:login')
 LOGIN_REDIRECT_URL = 'blog:index'
 
 LOGIN_URL = 'login'

@@ -9,7 +9,7 @@ class CommentForm(ModelForm):
         model = Comment
         fields = ('text',)
         widgets = {
-            "text": Textarea({"rows": "3"})
+            'text': Textarea({'rows': '3'})
         }
 
 
@@ -22,5 +22,5 @@ class PostForm(ModelForm):
             'pub_date': DateTimeInput(
                 format='%Y-%m-%dT%H:%M', attrs={'type': 'datetime-local'}
             ),
-            "text": Textarea({"rows": "5"}),
+            'text': Textarea({'rows': '5'}),
         }
